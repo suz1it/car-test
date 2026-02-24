@@ -31,6 +31,17 @@ public class CarsController : ControllerBase
     }
 
     /// <summary>
+    /// Gets the list of unique car makes for dropdown selection.
+    /// </summary>
+    [HttpGet("makes")]
+    [ProducesResponseType(typeof(IEnumerable<string>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<IEnumerable<string>>> GetMakes(CancellationToken cancellationToken)
+    {
+        var makes = await _carService.GetMakesAsync(cancellationToken);
+        return Ok(makes);
+    }
+
+    /// <summary>
     /// Gets current registration status for all cars.
     /// </summary>
     [HttpGet("registration-status")]

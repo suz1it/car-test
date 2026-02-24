@@ -1,15 +1,6 @@
 @import "tailwindcss";
-@import "flowbite/src/themes/default";
 @config "../tailwind.config.js";
 
-/* Flowbite v4 - default theme */
-/* Disable charts and datatables to avoid 156+ CSS rules with unsupported nesting (Tailwind v4) */
-
-@plugin "flowbite/plugin" {
-  charts: false;
-  datatables: false;
-}
-@source "../node_modules/flowbite/lib";
 @source "./";
 
 *,

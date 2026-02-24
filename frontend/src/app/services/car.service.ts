@@ -21,4 +21,8 @@ export class CarService {
   getRegistrationStatuses(): Observable<RegistrationStatus[]> {
     return this.http.get<RegistrationStatus[]>(`${this.apiUrl}/registration-status`);
   }
+
+  getMakes(): Observable<string[]> {
+    return this.http.get<string[]>(`${this.apiUrl}/makes`);
+  }
 }

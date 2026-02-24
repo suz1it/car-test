@@ -27,6 +27,16 @@ public class CarService : ICarService
         return cars;
     }
 
+    public async Task<IEnumerable<string>> GetMakesAsync(CancellationToken cancellationToken = default)
+    {
+        var cars = await LoadCarsAsync(cancellationToken);
+        return cars
+            .Select(c => c.Make)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(m => m, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
+
     public async Task<IEnumerable<RegistrationStatus>> GetRegistrationStatusesAsync(CancellationToken cancellationToken = default)
     {
         var cars = await LoadCarsAsync(cancellationToken);

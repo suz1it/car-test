@@ -12,6 +12,7 @@ import { CarService } from '../services/car.service';
 
 type CarsState = {
   cars: Car[];
+  makes: string[];
   loading: boolean;
   error: string | null;
   makeFilter: string;
@@ -19,6 +20,7 @@ type CarsState = {
 
 const initialState: CarsState = {
   cars: [],
+  makes: [],
   loading: true,
   error: null,
   makeFilter: '',
@@ -69,6 +71,9 @@ export const CarsStore = signalStore(
               error: err?.message ?? 'Failed to load cars',
               loading: false,
             }),
+        });
+        carService.getMakes().subscribe({
+          next: (makes) => patchState(store, { makes }),
         });
       },
     };
