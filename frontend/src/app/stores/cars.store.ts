@@ -9,53 +9,98 @@ import {
 } from '@ngrx/signals';
 import { Car } from '../models/car.model';
 import { CarService } from '../services/car.service';
+import type { CarsSortColumn, CarsSortDirection } from '../utils/cars.utils';
+
+export type { CarsSortColumn, CarsSortDirection };
 
 type CarsState = {
   cars: Car[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
   makes: string[];
   loading: boolean;
   error: string | null;
   makeFilter: string;
+  sortColumn: CarsSortColumn;
+  sortDirection: CarsSortDirection;
 };
 
 const initialState: CarsState = {
   cars: [],
+  totalCount: 0,
+  page: 1,
+  pageSize: 10,
   makes: [],
   loading: true,
   error: null,
   makeFilter: '',
+  sortColumn: 'make',
+  sortDirection: 'asc',
 };
 
 export const CarsStore = signalStore(
   { providedIn: 'root' },
   withState(initialState),
-  withComputed(({ cars, makeFilter }) => ({
-    filteredCars: computed(() => {
-      const list = cars();
-      const filter = makeFilter().trim().toLowerCase();
-      if (!filter) return list;
-      return list.filter((car) => car.make.toLowerCase().includes(filter));
-    }),
+  withComputed(({ totalCount, page, pageSize }) => ({
+    totalPages: computed(() => Math.ceil(totalCount() / pageSize()) || 1),
+    hasNextPage: computed(() => page() < Math.ceil(totalCount() / pageSize())),
+    hasPrevPage: computed(() => page() > 1),
   })),
   withMethods((store, carService = inject(CarService)) => {
-    const loadCars = (make?: string): void => {
+    const loadCars = (): void => {
       patchState(store, { loading: true, error: null });
-      carService.getCars(make).subscribe({
-        next: (cars) => patchState(store, { cars, loading: false }),
-        error: (err) =>
-          patchState(store, {
-            error: err?.message ?? 'Failed to load cars',
-            loading: false,
-          }),
-      });
+      carService
+        .getCars({
+          make: store.makeFilter().trim() || undefined,
+          page: store.page(),
+          pageSize: store.pageSize(),
+          sortColumn: store.sortColumn(),
+          sortDirection: store.sortDirection(),
+        })
+        .subscribe({
+          next: (result) =>
+            patchState(store, {
+              cars: result.items,
+              totalCount: result.totalCount,
+              page: result.page,
+              pageSize: result.pageSize,
+              loading: false,
+            }),
+          error: (err) =>
+            patchState(store, {
+              error: err?.message ?? 'Failed to load cars',
+              loading: false,
+            }),
+        });
     };
     return {
       loadCars,
       setMakeFilter(value: string): void {
         patchState(store, { makeFilter: value });
       },
+      setSort(column: CarsSortColumn): void {
+        const current = store.sortColumn();
+        const dir = store.sortDirection();
+        if (current === column) {
+          patchState(store, { sortDirection: dir === 'asc' ? 'desc' : 'asc' });
+        } else {
+          patchState(store, { sortColumn: column, sortDirection: 'asc' });
+        }
+        patchState(store, { page: 1 });
+        loadCars();
+      },
+      setPage(page: number): void {
+        patchState(store, { page });
+        loadCars();
+      },
+      setPageSize(pageSize: number): void {
+        patchState(store, { pageSize, page: 1 });
+        loadCars();
+      },
       applyFilter(): void {
-        loadCars(store.makeFilter().trim() || undefined);
+        patchState(store, { page: 1 });
+        loadCars();
       },
     };
   }),
@@ -63,15 +108,7 @@ export const CarsStore = signalStore(
     const carService = inject(CarService);
     return {
       onInit() {
-        patchState(store, { loading: true, error: null });
-        carService.getCars().subscribe({
-          next: (cars) => patchState(store, { cars, loading: false }),
-          error: (err) =>
-            patchState(store, {
-              error: err?.message ?? 'Failed to load cars',
-              loading: false,
-            }),
-        });
+        store.loadCars();
         carService.getMakes().subscribe({
           next: (makes) => patchState(store, { makes }),
         });

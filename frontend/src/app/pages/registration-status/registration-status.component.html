@@ -2,7 +2,7 @@
   <header class="mb-8 flex flex-wrap items-center justify-between gap-4">
     <div>
       <h1 class="text-3xl font-bold text-gray-900">Registration Status</h1>
-      <p class="mt-1 text-sm text-gray-500">Live registration expiry status (updates every 5 seconds via SignalR)</p>
+      <p class="mt-1 text-sm text-gray-500">Live registration expiry status (updates every 5 seconds using SignalR)</p>
     </div>
     @if (signalr.isConnected()) {
       <span class="inline-flex items-center gap-1.5 rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-800">
@@ -35,6 +35,38 @@
         />
       </div>
     </div>
+    <div class="min-w-0 flex-1 sm:flex-initial">
+      <label for="status-filter" class="mb-2 block text-sm font-medium text-gray-900">Status filter</label>
+      <div class="relative w-full sm:w-56">
+        <select
+          id="status-filter"
+          [ngModel]="statusFilter()"
+          (ngModelChange)="setStatusFilter($event)"
+          class="block w-full appearance-none rounded-lg border border-gray-300 bg-gray-50 p-2.5 pr-10 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+        >
+          <option value="all">All statuses</option>
+          <option value="valid">Valid</option>
+          <option value="expiringSoon">Expiring soon</option>
+          <option value="expired">Expired</option>
+        </select>
+        <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"
+          class="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500">
+          <path
+            d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z"
+            clip-rule="evenodd" fill-rule="evenodd"></path>
+        </svg>
+      </div>
+    </div>
+    <div class="min-w-0 flex-1 sm:flex-initial">
+      <label for="page-size" class="mb-2 block text-sm font-medium text-gray-900">Per page</label>
+      <select id="page-size" [ngModel]="pageSize()" (ngModelChange)="onPageSizeChange($event)"
+        class="block w-full appearance-none rounded-lg border border-gray-300 bg-gray-50 p-2.5 pr-10 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 sm:w-24">
+        <option [value]="5">5</option>
+        <option [value]="10">10</option>
+        <option [value]="25">25</option>
+        <option [value]="50">50</option>
+      </select>
+    </div>
   </div>
 
   @if (signalr.error()) {
@@ -46,44 +78,157 @@
     </div>
   }
 
+  @if (error()) {
+    <div class="mb-6 flex items-center rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800" role="alert">
+      <svg class="me-3 inline h-5 w-5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" />
+      </svg>
+      {{ error() }}
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="flex items-center justify-center rounded-lg border border-gray-200 bg-white p-16">
+      <div class="me-2 h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600"></div>
+      <span class="text-gray-500">Loading registration statuses…</span>
+    </div>
+  } @else {
   <div class="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
-    <table class="min-w-full divide-y divide-gray-200 text-left text-sm text-gray-500">
+    <div class="table-scroll-wrapper overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200 text-left text-sm text-gray-500">
       <thead class="bg-gray-50 text-xs uppercase text-gray-700">
         <tr>
-          <th scope="col" class="px-6 py-4">Registration</th>
-          <th scope="col" class="px-6 py-4">Make</th>
-          <th scope="col" class="px-6 py-4">Model</th>
-          <th scope="col" class="px-6 py-4">Expiry Date</th>
-          <th scope="col" class="px-6 py-4">Status</th>
+          <th scope="col" class="px-4 py-3 sm:px-6 sm:py-4">
+            <button type="button" (click)="setSort('registrationNumber')" class="table-sort-btn flex items-center gap-1 font-medium">
+              Registration
+              @switch (getSortIcon('registrationNumber')) {
+                @case ('asc') { <span class="text-gray-400">↑</span> }
+                @case ('desc') { <span class="text-gray-400">↓</span> }
+              }
+            </button>
+          </th>
+          <th scope="col" class="px-4 py-3 sm:px-6 sm:py-4">
+            <button type="button" (click)="setSort('make')" class="table-sort-btn flex items-center gap-1 font-medium">
+              Make
+              @switch (getSortIcon('make')) {
+                @case ('asc') { <span class="text-gray-400">↑</span> }
+                @case ('desc') { <span class="text-gray-400">↓</span> }
+              }
+            </button>
+          </th>
+          <th scope="col" class="px-4 py-3 sm:px-6 sm:py-4">
+            <button type="button" (click)="setSort('model')" class="table-sort-btn flex items-center gap-1 font-medium">
+              Model
+              @switch (getSortIcon('model')) {
+                @case ('asc') { <span class="text-gray-400">↑</span> }
+                @case ('desc') { <span class="text-gray-400">↓</span> }
+              }
+            </button>
+          </th>
+          <th scope="col" class="px-4 py-3 sm:px-6 sm:py-4">
+            <button type="button" (click)="setSort('registrationExpiryDate')" class="table-sort-btn flex items-center gap-1 font-medium">
+              Expiry Date
+              @switch (getSortIcon('registrationExpiryDate')) {
+                @case ('asc') { <span class="text-gray-400">↑</span> }
+                @case ('desc') { <span class="text-gray-400">↓</span> }
+              }
+            </button>
+          </th>
+          <th scope="col" class="px-4 py-3 sm:px-6 sm:py-4">
+            <button type="button" (click)="setSort('status')" class="table-sort-btn flex items-center gap-1 font-medium">
+              Status
+              @switch (getSortIcon('status')) {
+                @case ('asc') { <span class="text-gray-400">↑</span> }
+                @case ('desc') { <span class="text-gray-400">↓</span> }
+              }
+            </button>
+          </th>
         </tr>
       </thead>
       <tbody class="divide-y divide-gray-200 bg-white">
-        @for (status of filteredStatuses(); track status.carId) {
-          <tr class="border-b border-gray-200 hover:bg-gray-50">
-            <td class="whitespace-nowrap px-6 py-4 font-mono text-gray-700">{{ status.registrationNumber }}</td>
-            <td class="whitespace-nowrap px-6 py-4 font-medium text-gray-900">{{ status.make }}</td>
-            <td class="px-6 py-4 text-gray-700">{{ status.model }}</td>
-            <td class="whitespace-nowrap px-6 py-4 text-gray-600">{{ status.registrationExpiryDate | date: 'mediumDate' }}</td>
-            <td class="px-6 py-4">
-              @if (status.isExpired) {
-                <span class="rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800">Expired</span>
-              } @else {
-                <span class="rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">Valid</span>
+        @for (status of statuses(); track status.carId) {
+          <tr class="registration-row border-b border-gray-200 transition-colors duration-150"
+              [class.registration-row--expired]="getStatusType(status) === 'expired'"
+              [class.registration-row--expiring]="getStatusType(status) === 'expiringSoon'"
+              [class.registration-row--valid]="getStatusType(status) === 'valid'">
+            <td class="whitespace-nowrap px-4 py-3 font-mono text-gray-700 sm:px-6 sm:py-4">{{ status.registrationNumber }}</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 sm:px-6 sm:py-4">{{ status.make }}</td>
+            <td class="px-4 py-3 text-gray-700 sm:px-6 sm:py-4">{{ status.model }}</td>
+            <td class="whitespace-nowrap px-4 py-3 text-gray-600 sm:px-6 sm:py-4">{{ status.registrationExpiryDate | date: 'mediumDate' }}</td>
+            <td class="px-4 py-3 sm:px-6 sm:py-4">
+              @switch (getStatusType(status)) {
+                @case ('expired') {
+                  <span class="status-badge status-badge--expired inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium">
+                    <svg class="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" />
+                    </svg>
+                    Expired
+                  </span>
+                }
+                @case ('expiringSoon') {
+                  <span class="status-badge status-badge--expiring inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium">
+                    <svg class="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+                    </svg>
+                    Expiring soon
+                  </span>
+                }
+                @case ('valid') {
+                  <span class="status-badge status-badge--valid inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium">
+                    <svg class="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
+                    </svg>
+                    Valid
+                  </span>
+                }
               }
             </td>
           </tr>
         } @empty {
           <tr>
-            <td colspan="5" class="px-6 py-12 text-center text-gray-500">
-              @if (signalr.isConnected()) {
-                {{ searchQuery() ? 'No registrations match your search' : 'Waiting for data…' }}
-              } @else {
-                Connecting…
-              }
+            <td colspan="5" class="px-4 py-12 text-center text-gray-500 sm:px-6">
+              {{ searchQuery() || statusFilter() !== 'all' ? 'No registrations match your filters' : 'No registration statuses found' }}
             </td>
           </tr>
         }
       </tbody>
-    </table>
+      </table>
+    </div>
+    @if (totalCount() > 0) {
+    <div class="flex flex-col gap-4 border-t border-gray-200 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+      <p class="text-sm text-gray-600">
+        Showing
+        <span class="font-medium">{{ (page() - 1) * pageSize() + 1 }}</span>
+        –
+        <span class="font-medium">{{ Math.min(page() * pageSize(), totalCount()) }}</span>
+        of
+        <span class="font-medium">{{ totalCount() }}</span>
+        registrations
+      </p>
+      <nav class="flex items-center gap-1" aria-label="Pagination">
+        <button type="button" (click)="goToPage(page() - 1)" [disabled]="!hasPrevPage()"
+          class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50">
+          Previous
+        </button>
+        @for (p of getPageNumbers(); track p) {
+        <button type="button" (click)="goToPage(p)"
+          [class.bg-blue-600]="p === page()"
+          [class.text-white]="p === page()"
+          [class.bg-white]="p !== page()"
+          [class.text-gray-700]="p !== page()"
+          class="min-w-[2.25rem] rounded-lg border px-3 py-2 text-sm font-medium hover:bg-gray-50"
+          [class.border-blue-600]="p === page()"
+          [class.border-gray-300]="p !== page()">
+          {{ p }}
+        </button>
+        }
+        <button type="button" (click)="goToPage(page() + 1)" [disabled]="!hasNextPage()"
+          class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50">
+          Next
+        </button>
+      </nav>
+    </div>
+    }
   </div>
+  }
 </div>

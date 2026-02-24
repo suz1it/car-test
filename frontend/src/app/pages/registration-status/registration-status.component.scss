@@ -1,3 +1,66 @@
 :host {
   display: block;
 }
+
+.table-scroll-wrapper {
+  -webkit-overflow-scrolling: touch;
+}
+
+.table-sort-btn {
+  cursor: pointer;
+  padding: 0.25rem 0;
+  text-align: left;
+  background: none;
+  border: none;
+  color: inherit;
+  transition: color 0.15s ease;
+
+  &:hover {
+    color: #2563eb;
+  }
+}
+
+.registration-row {
+  transition: background-color 0.15s ease;
+
+  &:hover {
+    background-color: #f9fafb;
+  }
+
+  &--expired {
+    background-color: rgba(254, 242, 242, 0.7);
+
+    &:hover {
+      background-color: #fef2f2;
+    }
+  }
+
+  &--expiring {
+    background-color: rgba(255, 251, 235, 0.7);
+
+    &:hover {
+      background-color: #fffbeb;
+    }
+  }
+
+  &--valid:hover {
+    background-color: #f9fafb;
+  }
+}
+
+.status-badge {
+  &--expired {
+    background-color: #fee2e2;
+    color: #991b1b;
+  }
+
+  &--expiring {
+    background-color: #fef3c7;
+    color: #92400e;
+  }
+
+  &--valid {
+    background-color: #dcfce7;
+    color: #166534;
+  }
+}

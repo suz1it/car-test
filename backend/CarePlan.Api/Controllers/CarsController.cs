@@ -16,18 +16,30 @@ public class CarsController : ControllerBase
     }
 
     /// <summary>
-    /// Gets a list of cars with optional filter by make.
+    /// Gets a paginated list of cars with optional filter by make and sorting.
     /// </summary>
     /// <param name="make">Optional. Filter cars by manufacturer (e.g., Toyota, Honda).</param>
+    /// <param name="page">Page number (1-based).</param>
+    /// <param name="pageSize">Number of items per page.</param>
+    /// <param name="sortColumn">Sort column: id, make, model, registrationNumber, registrationExpiryDate.</param>
+    /// <param name="sortDirection">Sort direction: asc or desc.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     [HttpGet]
-    [ProducesResponseType(typeof(IEnumerable<Car>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<IEnumerable<Car>>> GetCars(
+    [ProducesResponseType(typeof(PagedResult<Car>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<PagedResult<Car>>> GetCars(
         [FromQuery] string? make,
-        CancellationToken cancellationToken)
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10,
+        [FromQuery] string? sortColumn = "make",
+        [FromQuery] string? sortDirection = "asc",
+        CancellationToken cancellationToken = default)
     {
-        var cars = await _carService.GetCarsAsync(make, cancellationToken);
-        return Ok(cars);
+        if (page < 1) page = 1;
+        if (pageSize < 1) pageSize = 10;
+        if (pageSize > 100) pageSize = 100;
+
+        var result = await _carService.GetCarsAsync(make, page, pageSize, sortColumn, sortDirection, cancellationToken);
+        return Ok(result);
     }
 
     /// <summary>
@@ -42,14 +54,32 @@ public class CarsController : ControllerBase
     }
 
     /// <summary>
-    /// Gets current registration status for all cars.
+    /// Gets a paginated list of registration statuses with optional search, status filter, and sorting.
     /// </summary>
+    /// <param name="search">Optional. Search in make, model, registration number, car ID.</param>
+    /// <param name="statusFilter">Optional. Filter by status: all, valid, expiringSoon, expired.</param>
+    /// <param name="page">Page number (1-based).</param>
+    /// <param name="pageSize">Number of items per page.</param>
+    /// <param name="sortColumn">Sort column: registrationNumber, make, model, registrationExpiryDate, status.</param>
+    /// <param name="sortDirection">Sort direction: asc or desc.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     [HttpGet("registration-status")]
-    [ProducesResponseType(typeof(IEnumerable<RegistrationStatus>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<IEnumerable<RegistrationStatus>>> GetRegistrationStatus(
-        CancellationToken cancellationToken)
+    [ProducesResponseType(typeof(PagedResult<RegistrationStatus>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<PagedResult<RegistrationStatus>>> GetRegistrationStatus(
+        [FromQuery] string? search,
+        [FromQuery] string? statusFilter = "all",
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10,
+        [FromQuery] string? sortColumn = "registrationExpiryDate",
+        [FromQuery] string? sortDirection = "asc",
+        CancellationToken cancellationToken = default)
     {
-        var statuses = await _carService.GetRegistrationStatusesAsync(cancellationToken);
-        return Ok(statuses);
+        if (page < 1) page = 1;
+        if (pageSize < 1) pageSize = 10;
+        if (pageSize > 100) pageSize = 100;
+
+        var result = await _carService.GetRegistrationStatusesPagedAsync(
+            search, statusFilter, page, pageSize, sortColumn, sortDirection, cancellationToken);
+        return Ok(result);
     }
 }

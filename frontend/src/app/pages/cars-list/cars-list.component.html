@@ -1,7 +1,7 @@
 <div class="max-w-6xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
   <header class="mb-8">
     <h1 class="text-3xl font-bold text-gray-900">Cars</h1>
-    <p class="mt-1 text-sm text-gray-500">Browse the car inventory with optional filter by make</p>
+    <p class="mt-1 text-sm text-gray-500">View car inventory with filter by make. Click column headers to sort.</p>
   </header>
 
   <div class="mb-6 flex flex-wrap items-end gap-4">
@@ -23,6 +23,16 @@
         </svg>
       </div>
     </div>
+    <div class="min-w-0 flex-1 sm:flex-initial">
+      <label for="page-size" class="mb-2 block text-sm font-medium text-gray-900">Per page</label>
+      <select id="page-size" [ngModel]="store.pageSize()" (ngModelChange)="onPageSizeChange($event)"
+        class="block w-full appearance-none rounded-lg border border-gray-300 bg-gray-50 p-2.5 pr-10 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 sm:w-24">
+        <option [value]="5">5</option>
+        <option [value]="10">10</option>
+        <option [value]="25">25</option>
+        <option [value]="50">50</option>
+      </select>
+    </div>
   </div>
 
   @if (store.error()) {
@@ -43,35 +53,111 @@
   </div>
   } @else {
   <div class="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
-    <table class="min-w-full divide-y divide-gray-200 text-left text-sm text-gray-500">
-      <thead class="bg-gray-50 text-xs uppercase text-gray-700">
-        <tr>
-          <th scope="col" class="px-6 py-4">ID</th>
-          <th scope="col" class="px-6 py-4">Make</th>
-          <th scope="col" class="px-6 py-4">Model</th>
-          <th scope="col" class="px-6 py-4">Registration</th>
-          <th scope="col" class="px-6 py-4">Expiry Date</th>
-        </tr>
-      </thead>
-      <tbody class="divide-y divide-gray-200 bg-white">
-        @for (car of store.filteredCars(); track car.id) {
-        <tr class="border-b border-gray-200 hover:bg-gray-50">
-          <td class="whitespace-nowrap px-6 py-4 font-mono text-gray-900">{{ car.id }}</td>
-          <td class="whitespace-nowrap px-6 py-4 font-medium text-gray-900">{{ car.make }}</td>
-          <td class="px-6 py-4 text-gray-700">{{ car.model }}</td>
-          <td class="whitespace-nowrap px-6 py-4 font-mono text-gray-700">{{ car.registrationNumber }}</td>
-          <td class="whitespace-nowrap px-6 py-4 text-gray-600">{{ car.registrationExpiryDate | date: 'mediumDate' }}
-          </td>
-        </tr>
-        } @empty {
-        <tr>
-          <td colspan="5" class="px-6 py-12 text-center text-gray-500">
-            No cars found
-          </td>
-        </tr>
+    <div class="table-scroll-wrapper overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200 text-left text-sm text-gray-500">
+        <thead class="bg-gray-50 text-xs uppercase text-gray-700">
+          <tr>
+            <th scope="col" class="px-4 py-3 sm:px-6 sm:py-4">
+              <button type="button" (click)="setSort('id')" class="table-sort-btn flex items-center gap-1 font-medium">
+                ID
+                @switch (getSortIcon('id')) {
+                  @case ('asc') { <span class="text-gray-400">↑</span> }
+                  @case ('desc') { <span class="text-gray-400">↓</span> }
+                }
+              </button>
+            </th>
+            <th scope="col" class="px-4 py-3 sm:px-6 sm:py-4">
+              <button type="button" (click)="setSort('make')" class="table-sort-btn flex items-center gap-1 font-medium">
+                Make
+                @switch (getSortIcon('make')) {
+                  @case ('asc') { <span class="text-gray-400">↑</span> }
+                  @case ('desc') { <span class="text-gray-400">↓</span> }
+                }
+              </button>
+            </th>
+            <th scope="col" class="px-4 py-3 sm:px-6 sm:py-4">
+              <button type="button" (click)="setSort('model')" class="table-sort-btn flex items-center gap-1 font-medium">
+                Model
+                @switch (getSortIcon('model')) {
+                  @case ('asc') { <span class="text-gray-400">↑</span> }
+                  @case ('desc') { <span class="text-gray-400">↓</span> }
+                }
+              </button>
+            </th>
+            <th scope="col" class="px-4 py-3 sm:px-6 sm:py-4">
+              <button type="button" (click)="setSort('registrationNumber')" class="table-sort-btn flex items-center gap-1 font-medium">
+                Registration
+                @switch (getSortIcon('registrationNumber')) {
+                  @case ('asc') { <span class="text-gray-400">↑</span> }
+                  @case ('desc') { <span class="text-gray-400">↓</span> }
+                }
+              </button>
+            </th>
+            <th scope="col" class="px-4 py-3 sm:px-6 sm:py-4">
+              <button type="button" (click)="setSort('registrationExpiryDate')" class="table-sort-btn flex items-center gap-1 font-medium">
+                Expiry Date
+                @switch (getSortIcon('registrationExpiryDate')) {
+                  @case ('asc') { <span class="text-gray-400">↑</span> }
+                  @case ('desc') { <span class="text-gray-400">↓</span> }
+                }
+              </button>
+            </th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200 bg-white">
+          @for (car of store.cars(); track car.id) {
+          <tr class="border-b border-gray-200 hover:bg-gray-50 transition-colors duration-150">
+            <td class="whitespace-nowrap px-4 py-3 font-mono text-gray-900 sm:px-6 sm:py-4">{{ car.id }}</td>
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-gray-900 sm:px-6 sm:py-4">{{ car.make }}</td>
+            <td class="px-4 py-3 text-gray-700 sm:px-6 sm:py-4">{{ car.model }}</td>
+            <td class="whitespace-nowrap px-4 py-3 font-mono text-gray-700 sm:px-6 sm:py-4">{{ car.registrationNumber }}</td>
+            <td class="whitespace-nowrap px-4 py-3 text-gray-600 sm:px-6 sm:py-4">{{ car.registrationExpiryDate | date: 'mediumDate' }}</td>
+          </tr>
+          } @empty {
+          <tr>
+            <td colspan="5" class="px-4 py-12 text-center text-gray-500 sm:px-6">
+              {{ store.makeFilter() ? 'No cars match your filters' : 'No cars found' }}
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    @if (store.totalCount() > 0) {
+    <div class="flex flex-col gap-4 border-t border-gray-200 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+      <p class="text-sm text-gray-600">
+        Showing
+        <span class="font-medium">{{ (store.page() - 1) * store.pageSize() + 1 }}</span>
+        –
+        <span class="font-medium">{{ Math.min(store.page() * store.pageSize(), store.totalCount()) }}</span>
+        of
+        <span class="font-medium">{{ store.totalCount() }}</span>
+        cars
+      </p>
+      <nav class="flex items-center gap-1" aria-label="Pagination">
+        <button type="button" (click)="goToPage(store.page() - 1)" [disabled]="!store.hasPrevPage()"
+          class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50">
+          Previous
+        </button>
+        @for (p of getPageNumbers(); track p) {
+        <button type="button" (click)="goToPage(p)"
+          [class.bg-blue-600]="p === store.page()"
+          [class.text-white]="p === store.page()"
+          [class.bg-white]="p !== store.page()"
+          [class.text-gray-700]="p !== store.page()"
+          class="min-w-[2.25rem] rounded-lg border px-3 py-2 text-sm font-medium hover:bg-gray-50"
+          [class.border-blue-600]="p === store.page()"
+          [class.border-gray-300]="p !== store.page()">
+          {{ p }}
+        </button>
         }
-      </tbody>
-    </table>
+        <button type="button" (click)="goToPage(store.page() + 1)" [disabled]="!store.hasNextPage()"
+          class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50">
+          Next
+        </button>
+      </nav>
+    </div>
+    }
   </div>
   }
 </div>
