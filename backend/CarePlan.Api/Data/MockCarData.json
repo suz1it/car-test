@@ -1,0 +1,44 @@
+[
+  {
+    "id": 1,
+    "make": "Toyota",
+    "model": "Camry",
+    "registrationNumber": "ABC-123",
+    "registrationExpiryDate": "2026-03-15"
+  },
+  {
+    "id": 2,
+    "make": "Honda",
+    "model": "Civic",
+    "registrationNumber": "XYZ-456",
+    "registrationExpiryDate": "2024-01-20"
+  },
+  {
+    "id": 3,
+    "make": "Toyota",
+    "model": "Corolla",
+    "registrationNumber": "DEF-789",
+    "registrationExpiryDate": "2025-12-01"
+  },
+  {
+    "id": 4,
+    "make": "Ford",
+    "model": "Focus",
+    "registrationNumber": "GHI-321",
+    "registrationExpiryDate": "2024-06-30"
+  },
+  {
+    "id": 5,
+    "make": "Toyota",
+    "model": "RAV4",
+    "registrationNumber": "JKL-654",
+    "registrationExpiryDate": "2026-08-22"
+  },
+  {
+    "id": 6,
+    "make": "BMW",
+    "model": "320i",
+    "registrationNumber": "MNO-987",
+    "registrationExpiryDate": "2025-02-10"
+  }
+]

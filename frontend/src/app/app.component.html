@@ -1,0 +1,29 @@
+<div class="min-h-screen flex flex-col bg-gray-50">
+  <nav class="bg-white border-b border-gray-200 px-4 py-3 sm:px-6 lg:px-8">
+    <div class="flex flex-wrap items-center justify-between gap-4">
+      <a routerLink="/" class="flex items-center">
+        <span class="text-xl font-semibold text-gray-900">CarePlan</span>
+      </a>
+      <div class="flex items-center gap-1">
+        <a
+          routerLink="/"
+          routerLinkActive="bg-blue-100 text-blue-700"
+          [routerLinkActiveOptions]="{ exact: true }"
+          class="rounded-lg px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900"
+        >
+          Cars
+        </a>
+        <a
+          routerLink="/registration"
+          routerLinkActive="bg-blue-100 text-blue-700"
+          class="rounded-lg px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900"
+        >
+          Registration Status
+        </a>
+      </div>
+    </div>
+  </nav>
+  <main class="flex-1">
+    <router-outlet />
+  </main>
+</div>

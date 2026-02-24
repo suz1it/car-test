@@ -1,0 +1,65 @@
+<div class="max-w-6xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+  <header class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900">Cars</h1>
+    <p class="mt-1 text-sm text-gray-500">Browse the car inventory with optional filter by make</p>
+  </header>
+
+  <div class="mb-6">
+    <label for="make-filter" class="mb-2 block text-sm font-medium text-gray-900">Filter by make</label>
+    <input
+      id="make-filter"
+      type="text"
+      [value]="store.makeFilter()"
+      (input)="onSearchInput($any($event.target).value)"
+      placeholder="e.g. Toyota, Honda"
+      class="block w-full max-w-xs rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-500"
+    />
+  </div>
+
+  @if (store.error()) {
+    <div class="mb-6 flex items-center rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800" role="alert">
+      <svg class="me-3 inline h-5 w-5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" />
+      </svg>
+      {{ store.error() }}
+    </div>
+  }
+
+  @if (store.loading()) {
+    <div class="flex items-center justify-center rounded-lg border border-gray-200 bg-white p-16">
+      <div class="me-2 h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600"></div>
+      <span class="text-gray-500">Loading cars…</span>
+    </div>
+  } @else {
+    <div class="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+      <table class="min-w-full divide-y divide-gray-200 text-left text-sm text-gray-500">
+        <thead class="bg-gray-50 text-xs uppercase text-gray-700">
+          <tr>
+            <th scope="col" class="px-6 py-4">ID</th>
+            <th scope="col" class="px-6 py-4">Make</th>
+            <th scope="col" class="px-6 py-4">Model</th>
+            <th scope="col" class="px-6 py-4">Registration</th>
+            <th scope="col" class="px-6 py-4">Expiry Date</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200 bg-white">
+          @for (car of store.filteredCars(); track car.id) {
+            <tr class="border-b border-gray-200 hover:bg-gray-50">
+              <td class="whitespace-nowrap px-6 py-4 font-mono text-gray-900">{{ car.id }}</td>
+              <td class="whitespace-nowrap px-6 py-4 font-medium text-gray-900">{{ car.make }}</td>
+              <td class="px-6 py-4 text-gray-700">{{ car.model }}</td>
+              <td class="whitespace-nowrap px-6 py-4 font-mono text-gray-700">{{ car.registrationNumber }}</td>
+              <td class="whitespace-nowrap px-6 py-4 text-gray-600">{{ car.registrationExpiryDate | date: 'mediumDate' }}</td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="5" class="px-6 py-12 text-center text-gray-500">
+                No cars found
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>
