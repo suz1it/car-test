@@ -189,27 +189,37 @@ public class CarService : ICarService
             return _cachedCars;
 
         var dataPath = Path.Combine(_environment.ContentRootPath, "Data", "MockCarData.json");
-        var json = await File.ReadAllTextAsync(dataPath, cancellationToken);
 
-        var options = new JsonSerializerOptions
+        try
         {
-            PropertyNameCaseInsensitive = true,
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        };
+            var json = await File.ReadAllTextAsync(dataPath, cancellationToken);
 
-        var cars = JsonSerializer.Deserialize<List<CarJsonDto>>(json, options)
-            ?? throw new InvalidOperationException("Failed to load car data");
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true,
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            };
 
-        _cachedCars = cars.Select(c => new Car
+            var cars = JsonSerializer.Deserialize<List<CarJsonDto>>(json, options)
+                ?? throw new InvalidOperationException("Failed to load car data");
+
+            _cachedCars = cars.Select(c => new Car
+            {
+                Id = c.Id,
+                Make = c.Make,
+                Model = c.Model,
+                RegistrationNumber = c.RegistrationNumber,
+                RegistrationExpiryDate = DateTime.Parse(c.RegistrationExpiryDate)
+            }).ToList();
+
+            return _cachedCars;
+        }
+        catch (Exception ex)
         {
-            Id = c.Id,
-            Make = c.Make,
-            Model = c.Model,
-            RegistrationNumber = c.RegistrationNumber,
-            RegistrationExpiryDate = DateTime.Parse(c.RegistrationExpiryDate)
-        }).ToList();
-
-        return _cachedCars;
+            _logger.LogError(ex, "Failed to load car data from {DataPath}. Stack trace: {StackTrace}",
+                dataPath, ex.ToString());
+            throw;
+        }
     }
 
     private sealed class CarJsonDto
